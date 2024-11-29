@@ -28,11 +28,18 @@ class OriginalFeed(models.Model):
         """
         Create multiple OriginalFeed instances from a string containing multiple URLs
         """
-        # Split URLs by newline or comma
-        urls = [url.strip() for url in re.split(r'[,\n]', urls) if url.strip()]
+        # First replace any combination of spaces and commas with a single comma
+        # This handles cases like "url1 , url2" or "url1,    url2"
+        urls = re.sub(r'\s*,\s*', ',', urls)
+        # Then split by either newlines or commas
+        urls = [url.strip() for url in re.split(r'[\n,]', urls)]
+        # Filter out empty strings and strip each URL
+        urls = [url for url in urls if url]
         
         created_feeds = []
-        for i, url in enumerate(urls):
+        title_index = 1  # Separate counter for title numbering
+        
+        for url in urls:
             # Skip if URL already exists
             if cls.objects.filter(url=url).exists():
                 continue
@@ -40,7 +47,8 @@ class OriginalFeed(models.Model):
             # Generate title if provided
             feed_title = ''
             if title:
-                feed_title = f"{title}-{i+1}" if len(urls) > 1 else title
+                feed_title = f"{title}-{title_index}" if len(urls) > 1 else title
+                title_index += 1
                 
             feed = cls(url=url, title=feed_title)
             feed.save()
