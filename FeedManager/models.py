@@ -16,8 +16,8 @@ class AppSetting(models.Model):
         return instance.auth_code if instance else None
 
 class OriginalFeed(models.Model):
-    url = models.URLField(unique=True, help_text="URL of the Atom or RSS feed", max_length=2048)
-    title = models.CharField(max_length=255, blank=True, default='', help_text="Optional title for the original feed")
+    url = models.TextField(unique=True, help_text="URL of the Atom or RSS feed. You can input multiple URLs separated by commas or newlines.", max_length=2048)
+    title = models.CharField(max_length=255, blank=True, default='', help_text="Optional title for the original feeds, multiple URLs will be numbered.")
     max_articles_to_keep = models.PositiveIntegerField(default=1000, help_text="Older articles will be removed when the limit is reached.")
     #tag = models.CharField(max_length=255, blank=True, default='', help_text="Optional tag for the original feed")
     tags = models.ManyToManyField('Tag', related_name='original_feeds', blank=True, help_text="Tags associated with this feed")

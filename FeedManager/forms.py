@@ -1,7 +1,8 @@
 from django import forms
 from .models import Filter, Article, ProcessedFeed, OriginalFeed
 from django.contrib import admin
-from django.core.validators import URLValidator, ValidationError
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 import re
 
 class FilterForm(forms.ModelForm):
