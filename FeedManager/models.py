@@ -23,7 +23,43 @@ class OriginalFeed(models.Model):
     tags = models.ManyToManyField('Tag', related_name='original_feeds', blank=True, help_text="Tags associated with this feed")
     valid = models.BooleanField(default=None, blank=True, null=True, editable=False, help_text="Whether the feed is valid.")
 
+    @classmethod
+    def create_from_urls(cls, urls, title=None):
+        """
+        Create multiple OriginalFeed instances from a string containing multiple URLs
+        """
+        # Split URLs by newline or comma
+        urls = [url.strip() for url in re.split(r'[,\n]', urls) if url.strip()]
+        
+        created_feeds = []
+        for i, url in enumerate(urls):
+            # Skip if URL already exists
+            if cls.objects.filter(url=url).exists():
+                continue
+                
+            # Generate title if provided
+            feed_title = ''
+            if title:
+                feed_title = f"{title}-{i+1}" if len(urls) > 1 else title
+                
+            feed = cls(url=url, title=feed_title)
+            feed.save()
+            created_feeds.append(feed)
+            
+        return created_feeds
+
     def save(self, *args, **kwargs):
+        if not self.pk:  # Only process multiple URLs for new instances
+            urls = self.url
+            if ',' in urls or '\n' in urls:
+                # Don't save the current instance if it contains multiple URLs
+                created_feeds = self.create_from_urls(urls, self.title)
+                if created_feeds:
+                    # Return the first created feed
+                    self.pk = created_feeds[0].pk
+                    self.__dict__.update(created_feeds[0].__dict__)
+                return
+        
         if not self.title:
             self.title = self.url
         super().save(*args, **kwargs)
