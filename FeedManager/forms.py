@@ -1,6 +1,8 @@
 from django import forms
-from .models import Filter, Article, ProcessedFeed
+from .models import Filter, Article, ProcessedFeed, OriginalFeed
 from django.contrib import admin
+from django.core.validators import URLValidator, ValidationError
+import re
 
 class FilterForm(forms.ModelForm):
     class Meta:
@@ -31,3 +33,26 @@ class ProcessedFeedAdminForm(forms.ModelForm):
 #            self.fields['digest_time'].widget = forms.HiddenInput()
 #            self.fields['additional_prompt_for_digest'].widget = forms.HiddenInput()
 #            self.fields['send_full_article'].widget = forms.HiddenInput()
+
+class OriginalFeedAdminForm(forms.ModelForm):
+    class Meta:
+        model = OriginalFeed
+        fields = '__all__'
+
+    def clean_url(self):
+        urls = self.cleaned_data['url']
+        # First replace any combination of spaces and commas with a single comma
+        urls = re.sub(r'\s*,\s*', ',', urls)
+        # Then split by either newlines or commas
+        url_list = [url.strip() for url in re.split(r'[\n,]', urls)]
+        # Filter out empty strings
+        url_list = [url for url in url_list if url]
+        
+        # Validate each URL
+        for url in url_list:
+            try:
+                URLValidator()(url)
+            except ValidationError:
+                raise ValidationError(f'Invalid URL format: {url}')
+        
+        return urls

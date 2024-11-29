@@ -3,7 +3,7 @@ from .models import ProcessedFeed, OriginalFeed, Filter, Article, AppSetting, Di
 from django.utils.html import format_html
 from django.urls import reverse
 from django.db.models import Count
-from .forms import FilterForm, ReadOnlyArticleForm, ProcessedFeedAdminForm
+from .forms import FilterForm, ReadOnlyArticleForm, ProcessedFeedAdminForm, OriginalFeedAdminForm
 from django.contrib.auth.models import User, Group
 from django.core.management import call_command
 from huey.contrib.djhuey import task
@@ -133,6 +133,7 @@ class IncludedInProcessedFeedListFilter(admin.SimpleListFilter):
             return queryset.filter(processed_feeds__isnull=True)
 
 class OriginalFeedAdmin(admin.ModelAdmin):
+    form = OriginalFeedAdminForm
     inlines = [ArticleInline]
     list_display = ('title', 'valid', 'url', 'processed_feeds_count')
     search_fields = ('title', 'url') 
